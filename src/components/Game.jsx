@@ -4,20 +4,23 @@ import Board from "./Board";
 import { easyAI, mediumAI, hardAI } from "../utils/api";
 import { checkWinner } from "../utils/gameLogic";
 
+// Bọc component Game bằng React.memo để tránh render lại không cần thiết
 const Game = React.memo(() => {
   const location = useLocation();
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // Dùng để điều hướng
 
+  // Lấy tham số từ query string (ví dụ: ?mode=ai)
   const queryParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
-  const mode = useMemo(() => queryParams.get("mode") || "player", [queryParams]);
+  const mode = useMemo(() => queryParams.get("mode") || "player", [queryParams]); // Mặc định là chơi với người
 
-  const [board, setBoard] = useState(Array(9).fill(null));
-  const [isXNext, setIsXNext] = useState(true);
-  const [winner, setWinner] = useState(null);
-  const [isDraw, setIsDraw] = useState(false);
-  const [difficulty, setDifficulty] = useState("Medium");
+  // Khai báo các state của game
+  const [board, setBoard] = useState(Array(9).fill(null)); // Mảng trạng thái bàn cờ
+  const [isXNext, setIsXNext] = useState(true);            // Theo dõi lượt chơi
+  const [winner, setWinner] = useState(null);              // Người chiến thắng
+  const [isDraw, setIsDraw] = useState(false);             // Trạng thái hòa
+  const [difficulty, setDifficulty] = useState("Medium");  // Mức độ AI (nếu chơi với máy)
 
-  // Xử lý khi kết thúc game
+  // Khi bàn cờ thay đổi, kiểm tra xem có ai thắng chưa
   useEffect(() => {
     const gameWinner = checkWinner(board);
     if (gameWinner) {
@@ -29,15 +32,15 @@ const Game = React.memo(() => {
     }
   }, [board]);
 
-  // Xử lý khi chơi với máy
+  // Nếu đang ở chế độ chơi với máy, thì để AI đánh khi đến lượt
   useEffect(() => {
     if (mode === "ai" && !isXNext && !winner && !isDraw) {
-      const aiMoveTimeout = setTimeout(aiMove, 300);
-      return () => clearTimeout(aiMoveTimeout);
+      const aiMoveTimeout = setTimeout(aiMove, 300); // Delay
+      return () => clearTimeout(aiMoveTimeout); // Clear timeout nếu component unmount
     }
   }, [board, isXNext, mode, winner, isDraw]);
 
-  // Di chuyển AI dựa vào độ khó
+  // Xác định nước đi của AI tùy theo độ khó
   const aiMove = useCallback(() => {
     let move;
     if (difficulty === "Easy") move = easyAI(board);
@@ -46,16 +49,16 @@ const Game = React.memo(() => {
     if (move !== null) handleClick(move);
   }, [board, difficulty]);
 
-  // Xử lý khi nhấp vào ô cờ
+  // Xử lý khi người chơi click vào ô
   const handleClick = useCallback((index) => {
-    if (board[index] || winner || isDraw) return;
+    if (board[index] || winner || isDraw) return; // Không làm gì nếu ô đã đánh hoặc game kết thúc
     const newBoard = [...board];
     newBoard[index] = isXNext ? "X" : "O";
     setBoard(newBoard);
     setIsXNext(!isXNext);
   }, [board, winner, isDraw, isXNext]);
 
-  // Khởi động lại game
+  // Xử lý khi người dùng nhấn nút chơi lại
   const handleReset = useCallback(() => {
     setBoard(Array(9).fill(null));
     setIsXNext(true);
@@ -63,11 +66,12 @@ const Game = React.memo(() => {
     setIsDraw(false);
   }, []);
 
-  // Quay lại trang chủ
+  // Xử lý quay lại trang chủ
   const handleGoHome = useCallback(() => {
     navigate("/");
   }, [navigate]);
 
+  // Trả về giao diện của component
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-blue-50">
       <h1 className="text-4xl font-bold mb-6 text-gray-800">Tic-Tac-Toe</h1>
@@ -90,8 +94,10 @@ const Game = React.memo(() => {
         </div>
       )}
 
+      {/* Hiển thị bàn cờ */}
       <Board board={board} onClick={handleClick} />
 
+      {/* Hiển thị trạng thái */}
       <h2 className="mt-4 text-2xl font-semibold text-gray-700">
         {winner
           ? `🎉 Winner: ${winner}`
@@ -100,6 +106,7 @@ const Game = React.memo(() => {
           : `Next player: ${isXNext ? "X" : "O"}`}
       </h2>
 
+      {/* Nút thao tác */}
       <div className="mt-6 flex gap-4">
         <button
           onClick={handleReset}
