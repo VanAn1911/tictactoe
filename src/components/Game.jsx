@@ -24,13 +24,24 @@ const Game = React.memo(() => {
   useEffect(() => {
     const gameWinner = checkWinner(board);
     if (gameWinner) {
-      setWinner(gameWinner);
-      alert(`🎉 Chúc mừng! ${gameWinner} chiến thắng!`);
+      setWinner(gameWinner); // chỉ cập nhật winner, không alert ngay
     } else if (!board.includes(null)) {
-      setIsDraw(true);
-      alert("🤝 Trận đấu hòa!");
+      setIsDraw(true); // cũng không alert ở đây
     }
   }, [board]);
+  
+  useEffect(() => {
+    if (winner) {
+      setTimeout(() => {
+        alert(`🎉 Chúc mừng! ${winner} chiến thắng!`);
+      }, 100); // delay nhẹ để giao diện kịp render
+    } else if (isDraw) {
+      setTimeout(() => {
+        alert("🤝 Trận đấu hòa!");
+      }, 100);
+    }
+  }, [winner, isDraw]);
+  
 
   // Nếu đang ở chế độ chơi với máy, thì để AI đánh khi đến lượt
   useEffect(() => {
